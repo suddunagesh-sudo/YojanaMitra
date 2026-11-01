@@ -1,0 +1,26 @@
+name: Build APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip Project
+        run: |
+          unzip -q YojanaMitra-AndroidStudio-Project.zip
+          PROJECT_DIR=$(find . -name "gradlew" | head -1 | xargs dirname)
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          cp -r $PROJECT_DIR/. . 2>/dev/null || true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: YojanaMitra-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
