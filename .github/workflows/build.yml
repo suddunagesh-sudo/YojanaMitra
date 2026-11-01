@@ -5,10 +5,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip and Build
+      - name: Unzip and List Files
         run: |
+          echo "Files in repo before unzip:"
+          ls -la
           unzip -o -q YojanaMitra-AndroidStudio-Project.zip
-          ls
+          echo "After unzip - full list:"
+          ls -R | head -n 300
+          echo "Searching gradlew:"
+          find . -name "gradlew*" -type f
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -16,14 +21,17 @@ jobs:
       - name: Build APK
         run: |
           GRADLEW=$(find . -name "gradlew" -type f | head -1)
-          echo "Found gradlew at $GRADLEW"
+          if [ -z "$GRADLEW" ]; then
+            echo "gradlew NOT FOUND - checking structure"
+            find . -type f | head -n 100
+            exit 1
+          fi
           DIR=$(dirname "$GRADLEW")
-          echo "Building in $DIR"
           cd "$DIR"
           chmod +x gradlew
-          ./gradlew assembleDebug --info
+          ./gradlew assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: YojanaMitra-APK
-          path: "**/app/build/outputs/apk/debug/app-debug.apk"
+          path: "**/app/build/outputs/apk/debug/*.apk"
